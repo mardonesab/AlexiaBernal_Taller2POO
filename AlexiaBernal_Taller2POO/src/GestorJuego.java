@@ -143,19 +143,161 @@ public class GestorJuego
             opcion = sc.nextInt();
             sc.nextLine(); // limpiar buffer
 
-            switch (opcion) {
-                case 1:
-                    jugador.mostrarEquipo();
-                    break;
-                case 2:
-                    System.out.println("Opción de captura en desarrollo...");
-                    break;
-                case 8:
-                    System.out.println("¡Hasta la próxima, " + jugador.getNombre() + "!");
-                    return;
-                default:
-                    System.out.println("Opción no implementada aún.");
+            switch (opcion) 
+            {
+            case 1:
+                jugador.mostrarEquipo();
+                break;
+            case 2:
+                mostrarHabitatsYCapturar();
+                break;
+            case 3:
+                accesoAlPC();
+                break;
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                System.out.println("Esta opción se implementará despues.");
+                break;
+            case 8:
+                System.out.println("¡Hasta la próxima, " + jugador.getNombre() + "!");
+                return;
+            default:
+                System.out.println("Opción inválida.");
             }
+            
         } while (opcion != 8);
+    }
+    
+    
+    //  SALIR A CAPTURAR 
+    public void mostrarHabitatsYCapturar() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\n=== ZONAS DISPONIBLES ===");
+        for (int i = 0; i < habitats.size(); i++) {
+            System.out.println((i+1) + ". " + habitats.get(i));
+        }
+        System.out.print("Elige una zona: ");
+        int zona = sc.nextInt() - 1;
+        sc.nextLine();
+
+        if (zona < 0 || zona >= habitats.size()) {
+            System.out.println("Zona inválida.");
+            return;
+        }
+
+        String habitatElegido = habitats.get(zona);
+        Pokemon pokemonEncontrado = generarPokemonAleatorio(habitatElegido);
+
+        if (pokemonEncontrado == null) {
+            System.out.println("No se encontró ningún Pokémon en esta zona.");
+            return;
+        }
+
+        System.out.println("\n¡Apareció un " + pokemonEncontrado.getNombre() + " (" + pokemonEncontrado.getTipo() + ")!");
+        System.out.println("1) Capturar");
+        System.out.println("2) Huir");
+        System.out.print("Elige: ");
+        int decision = sc.nextInt();
+        sc.nextLine();
+
+        if (decision == 1) {
+            if (agregarPokemonAJugador(pokemonEncontrado)) {
+                System.out.println("¡" + pokemonEncontrado.getNombre() + " ha sido capturado!");
+            }
+        } else {
+            System.out.println("Huiste del encuentro.");
+        }
+    }
+
+    private Pokemon generarPokemonAleatorio(String habitat) {
+        List<Pokemon> candidatos = new ArrayList<>();
+        for (Pokemon p : pokedex) {
+            if (p.getHabitat().equalsIgnoreCase(habitat)) {
+                candidatos.add(p);
+            }
+        }
+        if (candidatos.isEmpty()) return null;
+
+        // seleccion ponderada por porcentaje de aparición
+        double total = 0;
+        for (Pokemon p : candidatos) total += p.getPorcentajeAparicion();
+        
+        double randomValue = random.nextDouble() * total;
+        double acumulado = 0;
+
+        for (Pokemon p : candidatos) {
+            acumulado += p.getPorcentajeAparicion();
+            if (randomValue <= acumulado) {
+                return new Pokemon(p.getNombre(), p.getHabitat(), p.getPorcentajeAparicion(),
+                        p.getVida(), p.getAtaque(), p.getDefensa(), p.getAtaqueEspecial(),
+                        p.getDefensaEspecial(), p.getVelocidad(), p.getTipo());
+            }
+        }
+        return candidatos.get(0); 
+    }
+
+    private boolean agregarPokemonAJugador(Pokemon nuevo) {
+        // eevitar duplicados
+        for (Pokemon p : jugador.getEquipo()) {
+            if (p.getNombre().equalsIgnoreCase(nuevo.getNombre())) {
+                System.out.println("Ya tienes a " + nuevo.getNombre() + ".");
+                return false;
+            }
+        }
+        for (Pokemon p : jugador.getPc()) {
+            if (p.getNombre().equalsIgnoreCase(nuevo.getNombre())) {
+                System.out.println("Ya tienes a " + nuevo.getNombre() + " en el PC.");
+                return false;
+            }
+        }
+
+        jugador.agregarPokemon(nuevo);
+        return true;
+    }
+
+    //  ACCESO AL PC 
+    public void accesoAlPC() {
+        Scanner sc = new Scanner(System.in);
+        jugador.mostrarTodosLosPokemon();
+
+        System.out.println("\n1) Cambiar Pokémon de posición");
+        System.out.println("2) Volver al menú");
+        System.out.print("Elige: ");
+        int opcion = sc.nextInt();
+        sc.nextLine();
+
+        if (opcion == 1) {
+            System.out.print("Ingresa posición del primer Pokémon: ");
+            int pos1 = sc.nextInt() - 1;
+            System.out.print("Ingresa posición del segundo Pokémon: ");
+            int pos2 = sc.nextInt() - 1;
+            sc.nextLine();
+
+            List<Pokemon> todos = new ArrayList<>();
+            todos.addAll(jugador.getEquipo());
+            todos.addAll(jugador.getPc());
+
+            if (pos1 >= 0 && pos1 < todos.size() && pos2 >= 0 && pos2 < todos.size()) {
+                Pokemon temp = todos.get(pos1);
+                todos.set(pos1, todos.get(pos2));
+                todos.set(pos2, temp);
+
+                // Reconstruir equipo y PC
+                jugador.getEquipo().clear();
+                jugador.getPc().clear();
+                for (int i = 0; i < todos.size(); i++) {
+                    if (i < 6) {
+                        jugador.getEquipo().add(todos.get(i));
+                    } else {
+                        jugador.getPc().add(todos.get(i));
+                    }
+                }
+                System.out.println("¡Pokémon intercambiados correctamente!");
+            } else {
+                System.out.println("Posiciones inválidas.");
+            }
+        }
     }
 }

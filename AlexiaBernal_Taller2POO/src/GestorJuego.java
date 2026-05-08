@@ -155,6 +155,8 @@ public class GestorJuego
                 accesoAlPC();
                 break;
             case 4:
+                retarGimnasio();
+                break;
             case 5:
             case 6:
             case 7:
@@ -299,5 +301,96 @@ public class GestorJuego
                 System.out.println("Posiciones inválidas.");
             }
         }
+    }
+    
+    //--------------------------------------------------------------------------------
+    
+    // ==================== RETAR GIMNASIO ====================
+    public void retarGimnasio() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("\n=== GIMNASIOS DISPONIBLES ===");
+        
+        for (int i = 0; i < gimnasios.size(); i++) {
+            Gimnasio g = gimnasios.get(i);
+            System.out.println((i+1) + ". " + g);
+        }
+
+        System.out.print("Elige un gimnasio: ");
+        int eleccion = sc.nextInt() - 1;
+        sc.nextLine();
+
+        if (eleccion < 0 || eleccion >= gimnasios.size()) {
+            System.out.println("Opción inválida.");
+            return;
+        }
+
+        Gimnasio gimnasio = gimnasios.get(eleccion);
+        if (gimnasio.isDerrotado()) {
+            System.out.println("Ya has derrotado a este líder.");
+            return;
+        }
+
+        // Verificar progreso (no se puede saltar gimnasios)
+        for (int i = 0; i < eleccion; i++) {
+            if (!gimnasios.get(i).isDerrotado()) {
+                System.out.println("Debes derrotar los gimnasios anteriores primero.");
+                return;
+            }
+        }
+
+        System.out.println("\n¡Estás desafiando a " + gimnasio.getNombreLider() + "!");
+        boolean victoria = combatir(gimnasio.getEquipoLider().get(0)); // Combate contra el líder (simplificado)
+
+        if (victoria) {
+            gimnasio.setDerrotado(true);
+            jugador.agregarMedalla();
+            System.out.println("¡Felicidades! Has derrotado a " + gimnasio.getNombreLider() + ".");
+        } else {
+            System.out.println("Has sido derrotado. Inténtalo de nuevo después de curar a tus Pokémon.");
+        }
+    }
+
+    //  SISTEMA DE COMBATE 
+    private boolean combatir(Pokemon rival) {
+        Scanner sc = new Scanner(System.in);
+        Pokemon pokemonJugador = elegirPokemonParaCombate();
+
+        if (pokemonJugador == null) return false;
+
+        System.out.println("\n=== COMBATE ===");
+        System.out.println("Tu Pokémon: " + pokemonJugador.getNombre() + " vs " + rival.getNombre());
+
+        double efectividad = TablaTipos.getEfectividad(pokemonJugador.getTipo(), rival.getTipo());
+        int sumaJugador = (int)(pokemonJugador.getSumaStats() * efectividad);
+        int sumaRival = rival.getSumaStats();
+
+        System.out.println("Suma de stats (con efectividad): " + sumaJugador + " vs " + sumaRival);
+
+        if (sumaJugador > sumaRival) {
+            System.out.println("¡Victoria!");
+            return true;
+        } else {
+            pokemonJugador.debilitar();
+            System.out.println("Derrota...");
+            return false;
+        }
+    }
+
+    private Pokemon elegirPokemonParaCombate() {
+        jugador.mostrarEquipo();
+        System.out.print("Elige tu Pokémon para combatir (número): ");
+        Scanner sc = new Scanner(System.in);
+        int idx = sc.nextInt() - 1;
+        sc.nextLine();
+
+        if (idx >= 0 && idx < jugador.getEquipo().size()) {
+            Pokemon p = jugador.getEquipo().get(idx);
+            if (p.getEstado().equals("Debilitado")) {
+                System.out.println("Este Pokémon está debilitado.");
+                return null;
+            }
+            return p;
+        }
+        return null;
     }
 }

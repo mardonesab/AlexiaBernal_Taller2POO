@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 
 public class GestorJuego 
 {
@@ -92,5 +93,69 @@ public class GestorJuego
 
     public List<Pokemon> getPokedex() {
         return pokedex;
+    }
+    
+    
+    // CARGA DE REGISTROS (Continuar Partida) 
+    public boolean cargarPartida(String ruta) {
+        try (BufferedReader br = new BufferedReader(new FileReader(ruta))) {
+            String linea = br.readLine(); // Primera línea: nombre;medallas
+            if (linea != null) {
+                String[] datos = linea.split(";");
+                String nombre = datos[0];
+                int medallas = Integer.parseInt(datos[1]);
+
+                jugador = new Jugador(nombre);
+                jugador.agregarMedalla(); // se ajusta después según cantidad real
+
+                // Cargar Pokémon del jugador (las siguientes líneas)
+                while ((linea = br.readLine()) != null) {
+                    if (linea.trim().isEmpty()) continue;
+                    // por ahora solo mostramos
+                    System.out.println("   → " + linea);
+                }
+                System.out.println("\nPartida cargada correctamente. Bienvenido de nuevo, " + nombre + "!");
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println("No se encontró partida guardada o error al cargar.");
+        }
+        return false;
+    }
+
+    // MENÚ PRINCIPAL 
+    public void mostrarMenuPrincipal() {
+        Scanner sc = new Scanner(System.in);
+        int opcion;
+
+        do {
+            System.out.println("\n=== MENÚ PRINCIPAL ===");
+            System.out.println("1) Revisar equipo");
+            System.out.println("2) Salir a capturar");
+            System.out.println("3) Acceso al PC");
+            System.out.println("4) Retar un gimnasio");
+            System.out.println("5) Desafío al Alto Mando");
+            System.out.println("6) Curar Pokémon");
+            System.out.println("7) Guardar");
+            System.out.println("8) Guardar y Salir");
+            System.out.print("Elige una opción: ");
+
+            opcion = sc.nextInt();
+            sc.nextLine(); // limpiar buffer
+
+            switch (opcion) {
+                case 1:
+                    jugador.mostrarEquipo();
+                    break;
+                case 2:
+                    System.out.println("Opción de captura en desarrollo...");
+                    break;
+                case 8:
+                    System.out.println("¡Hasta la próxima, " + jugador.getNombre() + "!");
+                    return;
+                default:
+                    System.out.println("Opción no implementada aún.");
+            }
+        } while (opcion != 8);
     }
 }

@@ -10,20 +10,28 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         GestorJuego gestor = new GestorJuego();
 
-        // Cargar archivos
+        // Carga inicial de datos
         gestor.cargarPokedex("datos/Pokedex.txt");
         gestor.cargarHabitats("datos/Habitats.txt");
         gestor.cargarGimnasios("datos/Gimnasios.txt");
         gestor.cargarAltoMando("datos/AltoMando.txt");
 
-        System.out.print("\nIngresa tu nombre de entrenador: ");
-        String nombre = sc.nextLine();
+        System.out.println("\n1) Nueva Partida");
+        System.out.println("2) Continuar Partida");
+        System.out.print("Elige una opción: ");
+        int opcionInicio = sc.nextInt();
+        sc.nextLine();
 
-        gestor.iniciarNuevaPartida(nombre);
+        if (opcionInicio == 2) {
+            gestor.cargarPartida("datos/Registros.txt");
+        } else {
+            System.out.print("Ingresa tu nombre de entrenador: ");
+            String nombre = sc.nextLine();
+            gestor.iniciarNuevaPartida(nombre);
+        }
 
-        gestor.getJugador().mostrarEquipo();
+        gestor.mostrarMenuPrincipal();
 
-        
         sc.close();
     }
 

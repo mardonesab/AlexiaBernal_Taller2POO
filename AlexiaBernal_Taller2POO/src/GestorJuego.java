@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,11 +160,16 @@ public class GestorJuego
                 retarGimnasio();
                 break;
             case 5:
+                desafioAltoMando();
+                break;
             case 6:
+                curarPokemon();
+                break;
             case 7:
-                System.out.println("Esta opción se implementará despues.");
+                guardarPartida("datos/Registros.txt");
                 break;
             case 8:
+                guardarPartida("datos/Registros.txt");
                 System.out.println("¡Hasta la próxima, " + jugador.getNombre() + "!");
                 return;
             default:
@@ -303,7 +310,6 @@ public class GestorJuego
         }
     }
     
-    //--------------------------------------------------------------------------------
     
     // ==================== RETAR GIMNASIO ====================
     public void retarGimnasio() {
@@ -393,4 +399,81 @@ public class GestorJuego
         }
         return null;
     }
+    
+    
+    
+    //  CURAR POKÉMON 
+    public void curarPokemon() {
+        for (Pokemon p : jugador.getEquipo()) {
+            p.curar();
+        }
+        for (Pokemon p : jugador.getPc()) {
+            p.curar();
+        }
+        System.out.println("Todos tus Pokémon han sido curados y están en estado Vivo.");
+    }
+
+    // DESAFÍO AL ALTO MANDO 
+    public void desafioAltoMando() {
+        if (jugador.getMedallas() < 8) {
+            System.out.println("Debes derrotar los 8 gimnasios antes de desafiar al Alto Mando.");
+            return;
+        }
+
+        System.out.println("\n=== DESAFÍO AL ALTO MANDO ===");
+        System.out.println("¡Prepárate! Deberás combatir contra todos los miembros seguidos.");
+
+        Scanner sc = new Scanner(System.in);
+        boolean derrotado = false;
+
+        for (MiembroAltoMando miembro : altoMando) {
+            System.out.println("\n→ Combate contra " + miembro.getNombre());
+            boolean victoria = combatirContraEquipo(miembro.getEquipo());
+
+            if (!victoria) {
+                derrotado = true;
+                break;
+            }
+        }
+
+        if (!derrotado) {
+            System.out.println("\n¡FELICIDADES! Has derrotado al Alto Mando y te has coronado Campeón Pokémon.");
+        } else {
+            System.out.println("\nHas sido derrotado en el Alto Mando.");
+        }
+    }
+
+    private boolean combatirContraEquipo(List<Pokemon> equipoRival) {
+        for (Pokemon rival : equipoRival) {
+            boolean victoria = combatir(rival);
+            if (!victoria) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // GUARDAR PARTIDA 
+    public void guardarPartida(String ruta) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(ruta))) {
+            // Primera línea: nombre;medallas
+            bw.write(jugador.getNombre() + ";" + jugador.getMedallas());
+            bw.newLine();
+
+            // Pokémon del equipo y PC
+            for (Pokemon p : jugador.getEquipo()) {
+                bw.write(p.getNombre() + ";" + p.getEstado());
+                bw.newLine();
+            }
+            for (Pokemon p : jugador.getPc()) {
+                bw.write(p.getNombre() + ";" + p.getEstado());
+                bw.newLine();
+            }
+
+            System.out.println("Partida guardada correctamente en Registros.txt");
+        } catch (IOException e) {
+            System.out.println("Error al guardar la partida: " + e.getMessage());
+        }
+    }
+    
 }

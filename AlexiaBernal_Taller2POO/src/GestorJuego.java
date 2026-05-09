@@ -69,14 +69,6 @@ public class GestorJuego
         }
     }
 
-    // por ahora solo imprimimos que se cargaron (los implementaremos completo después)
-    public void cargarGimnasios(String ruta) {
-        System.out.println("Gimnasios cargados (implementación completa despues)");
-    }
-
-    public void cargarAltoMando(String ruta) {
-        System.out.println("Alto Mando cargado (implementación completa despues)");
-    }
 
     // MÉTODOS BÁSICOS 
 
@@ -126,58 +118,6 @@ public class GestorJuego
     }
 
     // MENÚ PRINCIPAL 
-    public void mostrarMenuPrincipal() {
-        Scanner sc = new Scanner(System.in);
-        int opcion;
-
-        do {
-            System.out.println("\n=== MENÚ PRINCIPAL ===");
-            System.out.println("1) Revisar equipo");
-            System.out.println("2) Salir a capturar");
-            System.out.println("3) Acceso al PC");
-            System.out.println("4) Retar un gimnasio");
-            System.out.println("5) Desafío al Alto Mando");
-            System.out.println("6) Curar Pokémon");
-            System.out.println("7) Guardar");
-            System.out.println("8) Guardar y Salir");
-            System.out.print("Elige una opción: ");
-
-            opcion = sc.nextInt();
-            sc.nextLine(); // limpiar buffer
-
-            switch (opcion) 
-            {
-            case 1:
-                jugador.mostrarEquipo();
-                break;
-            case 2:
-                mostrarHabitatsYCapturar();
-                break;
-            case 3:
-                accesoAlPC();
-                break;
-            case 4:
-                retarGimnasio();
-                break;
-            case 5:
-                desafioAltoMando();
-                break;
-            case 6:
-                curarPokemon();
-                break;
-            case 7:
-                guardarPartida("datos/Registros.txt");
-                break;
-            case 8:
-                guardarPartida("datos/Registros.txt");
-                System.out.println("¡Hasta la próxima, " + jugador.getNombre() + "!");
-                return;
-            default:
-                System.out.println("Opción inválida.");
-            }
-            
-        } while (opcion != 8);
-    }
     
     
     //  SALIR A CAPTURAR 
@@ -474,6 +414,109 @@ public class GestorJuego
         } catch (IOException e) {
             System.out.println("Error al guardar la partida: " + e.getMessage());
         }
+    }
+    
+    // -------------------------------------------------------------------------------------
+    
+    
+    
+    // CARGA COMPLETA DE GIMNASIOS Y ALTO MANDO 
+    public void cargarGimnasios(String ruta) {
+        try (BufferedReader br = new BufferedReader(new FileReader(ruta))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                if (linea.trim().isEmpty()) continue;
+                String[] datos = linea.split(";");
+                // Ejemplo formato: 1;EmmaLaArdillaRabiosa;Sin derrotar;3;Minun;Plusle;Emolga
+                if (datos.length >= 4) {
+                    List<Pokemon> equipo = new ArrayList<>();
+                    for (int i = 4; i < datos.length; i++) {
+                        Pokemon p = buscarPokemonPorNombre(datos[i]);
+                        if (p != null) equipo.add(p);
+                    }
+                    Gimnasio g = new Gimnasio(datos[1], equipo);
+                    gimnasios.add(g);
+                }
+            }
+            System.out.println("Se cargaron " + gimnasios.size() + " gimnasios.");
+        } catch (Exception e) {
+            System.out.println("Error al cargar Gimnasios: " + e.getMessage());
+        }
+    }
+
+    public void cargarAltoMando(String ruta) {
+        try (BufferedReader br = new BufferedReader(new FileReader(ruta))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                if (linea.trim().isEmpty()) continue;
+                String[] datos = linea.split(";");
+                List<Pokemon> equipo = new ArrayList<>();
+                for (int i = 2; i < datos.length; i++) {
+                    Pokemon p = buscarPokemonPorNombre(datos[i]);
+                    if (p != null) equipo.add(p);
+                }
+                MiembroAltoMando m = new MiembroAltoMando(datos[1], equipo);
+                altoMando.add(m);
+            }
+            System.out.println("Se cargaron " + altoMando.size() + " miembros del Alto Mando.");
+        } catch (Exception e) {
+            System.out.println("Error al cargar Alto Mando: " + e.getMessage());
+        }
+    }
+
+    private Pokemon buscarPokemonPorNombre(String nombre) {
+        for (Pokemon p : pokedex) {
+            if (p.getNombre().equalsIgnoreCase(nombre)) {
+                return new Pokemon(p.getNombre(), p.getHabitat(), p.getPorcentajeAparicion(),
+                        p.getVida(), p.getAtaque(), p.getDefensa(), p.getAtaqueEspecial(),
+                        p.getDefensaEspecial(), p.getVelocidad(), p.getTipo());
+            }
+        }
+        return null;
+    }
+
+    //  MEJORA DE MENÚ (con try-catch) 
+    public void mostrarMenuPrincipal() {
+        Scanner sc = new Scanner(System.in);
+        int opcion;
+
+        do {
+            System.out.println("\n=== MENÚ PRINCIPAL - " + jugador.getNombre() + " (" + jugador.getMedallas() + " medallas) ===");
+            System.out.println("1) Revisar equipo");
+            System.out.println("2) Salir a capturar");
+            System.out.println("3) Acceso al PC");
+            System.out.println("4) Retar un gimnasio");
+            System.out.println("5) Desafío al Alto Mando");
+            System.out.println("6) Curar Pokémon");
+            System.out.println("7) Guardar");
+            System.out.println("8) Guardar y Salir");
+            System.out.print("Elige una opción: ");
+
+            try {
+                opcion = sc.nextInt();
+                sc.nextLine();
+
+                switch (opcion) {
+                    case 1 -> jugador.mostrarEquipo();
+                    case 2 -> mostrarHabitatsYCapturar();
+                    case 3 -> accesoAlPC();
+                    case 4 -> retarGimnasio();
+                    case 5 -> desafioAltoMando();
+                    case 6 -> curarPokemon();
+                    case 7 -> guardarPartida("datos/Registros.txt");
+                    case 8 -> {
+                        guardarPartida("datos/Registros.txt");
+                        System.out.println("¡Gracias por jugar!");
+                        return;
+                    }
+                    default -> System.out.println("Opción inválida.");
+                }
+            } catch (Exception e) {
+                System.out.println("Entrada inválida. Por favor ingresa un número.");
+                sc.nextLine();
+                opcion = 0;
+            }
+        } while (true);
     }
     
 }
